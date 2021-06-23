@@ -422,8 +422,87 @@ SELECT DATABASE();
     ```sql
     SELECT title, released_year as 'year',
         CASE
+            WHEN released_year IS NULL THEN 'MISSING'
+            <!-- IS NULL checks for null -->
             WHEN released_year>=2000 THEN '21ST CENTURY'
             WHEN released_year>=1900 AND released_year<2000 THEN '20TH CENTURY'
             ELSE '19TH CENTURY'
         END AS 'TIMELINE'
     FROM books;
+    ```
+## One to Many
+* Types of Relationships -
+    * One to one relationship
+    * One to many relationship
+    * Many to many relationship
+* Primary Key - A primary key constrain is a column or group of columns that uniquely identifies every row in the table of the relational database management system. There can not be any duplicate in the table. A table can have only one primary key.
+* Foreign key - A foreign key is a column that creates a relationship between two tables. It acts as a cross-reference between two tables as it references the primary key of another table. Every relationship int eh database should be supported by a foreign key.
+* An example to create two tables (one to many)-
+    ```sql
+    CREATE TABLE customers(
+        id INT auto_increment PRIMARY KEY, 
+        first_name VARCHAR(20) NOT NULL, 
+        last_name VARCHAR(20) NOT NULL,
+        email VARCHAR(50) NOT NULL);
+    CREATE TABLE orders(
+        id INT auto_increment PRIMARY KEY, 
+        order_date DATE DEFAULT NOW(),
+        amount DECIMAL (8,2) DEFAULT 0.00, 
+        customer_id INT, 
+        FOREIGN KEY(customer_id) REFERENCES customers(id));
+    ```
+* Joins - To establish a connection between two or more database tables based on matching columns, thereby creating a relationship between the tables.
+* Cross join produces a result set which is the number of rows in the first table multiplied by the number of rows in the second table if no where clause is used. Example of a cross join -
+    ```sql
+    SELECT * FROM orders,customers;
+    ```
+* Inner join - Selects records that have matching values in both tables.
+Example of implicit inner join -
+    ```sql
+    SELECT first_name,last_name,order_date, amount FROM customers,orders 
+    WHERE customers.id = orders.customer_id;
+    ```
+    Example of Explicit inner join(Prefered) -
+    ```sql
+    SELECT first_name,last_name,order_date,amount FROM customers
+    JOIN orders
+        ON customers.id = orders.customer_id;
+    ```
+* Left join - returns all records from the left table and the matching records from the right table.
+Example of left join -
+    ```sql
+    SELECT first_name,last_name,order_date,amount FROM customers
+    LEFT JOIN orders
+        ON customers.id = orders.customer_id;
+    ```
+* To replace NULL with something -
+    ```sql
+    SELECT IFNULL([checker],[replacement]) FROM tablename;
+    ```
+* To display the total spending of all customers -
+    ```sql
+    SELECT first_name, last_name, IFNULL(sum(amount),0.00) AS 'Total spent' 
+    FROM customers 
+    LEFT JOIN orders 
+        ON customers.id = orders.customer_id
+    GROUP BY customers.id 
+    ORDER BY 'total spent';
+    ```
+* Right join - returns all records from the right table and the matching records from the left table.
+    ```sql
+    SELECT first_name,last_name,order_date,amount FROM customers
+    RIGHT JOIN orders
+        ON customers.id = orders.customer_id;
+    ```
+* Delete a table data with foreign key
+    ```sql
+    <!-- use ON DELETE CASCADE while creating table -->
+    CREATE TABLE orders(
+        id INT auto_increment PRIMARY KEY, 
+        order_date DATE DEFAULT NOW(),
+        amount DECIMAL (8,2) DEFAULT 0.00, 
+        customer_id INT, 
+        FOREIGN KEY(customer_id) REFERENCES customers(id)
+        ON DELETE CASCADE);
+    DELETE FROM customers WHERE email='xyz@gmail.com';
+    ```
